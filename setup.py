@@ -15,8 +15,7 @@ setup(
         "matplotlib",
         "folium",
         "selenium",
-        "requests",
-        "unittest"
+        "requests"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
