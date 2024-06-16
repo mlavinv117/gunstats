@@ -14,8 +14,7 @@ setup(
         "pandas",
         "matplotlib",
         "folium",
-        "selenium",
-        "requests"
+        "selenium"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

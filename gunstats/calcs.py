@@ -2,49 +2,53 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import folium
 from selenium import webdriver
-import requests
+import json
 import os
 
 def print_biggest_handguns(df: pd.DataFrame) -> None:
     """
     Function to print the state and year with the highest number of handguns.
     Args:
-     - df (pd.DataFrame): The dataframe with data grouped by year and state.
+     -df (pd.DataFrame): The dataframe with data grouped by year and state.
     Returns:
-     - None
+     -None
     """
 
     # Find the row with the maximum number of handguns
     max_handguns_row = df.loc[df['handgun'].idxmax()]
-
     state = max_handguns_row['state']
     year = max_handguns_row['year']
-    handguns = max_handguns_row['handgun']
+    handguns = int(max_handguns_row['handgun'])
+
     # Print the state and year with the highest number of handguns
     print(
-        f"The state with the highest number of handguns is {state} "
-        f"in the year {year} with {handguns} handguns."
+        f"Exercise 3 - The state with the highest number of handguns is {state}"
+        f" in the year {year} with {handguns} handguns."
     )
+
+    return state, year, handguns
 
 
 def print_biggest_longguns(df: pd.DataFrame) -> None:
     """
     Function to print the state and year with the highest number of long guns.
     Args:
-     - df (pd.DataFrame): The dataframe with data grouped by year and state.
+     -df (pd.DataFrame): The dataframe with data grouped by year and state.
     Returns:
-     - None
+     -None
     """
 
     # Find the row with the maximum number of long guns
     max_longguns_row = df.loc[df['long_gun'].idxmax()]
-
     state = max_longguns_row['state']
     year = max_longguns_row['year']
-    longguns = max_longguns_row['long_gun']
+    longguns = int(max_longguns_row['long_gun'])
+
     # Print the state and year with the highest number of long guns
-    print(f"The state with the highest number of long guns is {state}"
-          f"in the year {year} with {longguns} long guns.")
+    print(f"Exercise 3 - The state with the highest number of long guns is "
+          f"{state}in the year {year} with {longguns} long guns.")
+
+    return state, year, longguns
 
 
 def time_evolution(df: pd.DataFrame) -> None:
@@ -52,9 +56,9 @@ def time_evolution(df: pd.DataFrame) -> None:
     Function to create a time evolution graph for the number of permits,
     handguns, and long guns registered each year.
     Args:
-     - df (pd.DataFrame): The dataframe with data grouped by year and state.
+     -df (pd.DataFrame): The dataframe with data grouped by year and state.
     Returns:
-     - None
+     -None
     """
 
     # Group by year and sum the values for each year
@@ -70,7 +74,7 @@ def time_evolution(df: pd.DataFrame) -> None:
              marker='o')
 
     # Adding titles and labels
-    plt.title('Evolution of Firearm Permits, Handguns, and Long Guns')
+    plt.title('Excersise 4 - Evolution of Permits, Handguns, and Long Guns')
     plt.xlabel('Year')
     plt.ylabel('Count')
     plt.legend()
@@ -83,14 +87,14 @@ def analyze_state_data(df: pd.DataFrame) -> None:
     """
     Function to analyze state data and print the results as specified.
     Args:
-     - df (pd.DataFrame): The dataframe with relative values calculated.
+     -df (pd.DataFrame): The dataframe with relative values calculated.
     Returns:
-     - None
+     -None
     """
 
     # Calculate and print the mean of permit_perc
-    mean_permit_perc = df['permit_perc'].mean()
-    print(f"Mean permit_perc: {mean_permit_perc:.2f}")
+    old_mean_permit_perc = df['permit_perc'].mean()
+    print(f"Mean permit_perc: {old_mean_permit_perc:.2f}")
 
     # Print information about Kentucky
     kentucky_data = df[df['state'] == 'Kentucky']
@@ -98,7 +102,7 @@ def analyze_state_data(df: pd.DataFrame) -> None:
     print(kentucky_data)
 
     # Replace the permit_perc value for Kentucky with the mean
-    df.loc[df['state'] == 'Kentucky', 'permit_perc'] = mean_permit_perc
+    df.loc[df['state'] == 'Kentucky', 'permit_perc'] = old_mean_permit_perc
 
     # Recalculate and print the mean of permit_perc
     new_mean_permit_perc = df['permit_perc'].mean()
@@ -106,31 +110,33 @@ def analyze_state_data(df: pd.DataFrame) -> None:
 
     # Print analysis
     print("Analysis:")
-    print(f"The mean permit_perc changed from {mean_permit_perc:.2f}"
+    print(f"The mean permit_perc changed from {old_mean_permit_perc:.2f}"
           f"to {new_mean_permit_perc:.2f}.")
-    print("This change illustrates the impact of outliers on statistical"
-          "metrics.")
+    print("This change illustrates the impact of outliers on statistical "
+          "metrics. In this example, we handled outliers by imputation: we "
+          "imputed the mean for Kentucky with the mean of all states, to bring "
+          "the metric closer to the average of our data.")
+
+    return old_mean_permit_perc, new_mean_permit_perc
 
 
-def create_choropleth_map(df: pd.DataFrame, column: str, geo_json_url: str,
+def create_choropleth_map(df: pd.DataFrame, column: str, geo_json_path: str,
                           map_title: str, output_file: str) -> None:
     """
     Function to create a choropleth map for a specific column.
-
     Args:
-     - df (pd.DataFrame): The dataframe with the data.
-     - column (str): The column to visualize.
-     - geo_json_url (str): The URL to the geo JSON file.
-     - map_title (str): The title of the map.
-     - output_file (str): The file name to save the map as an image.
-
+     -df (pd.DataFrame): The dataframe with the data.
+     -column (str): The column to visualize.
+     -geo_json_path (str): The path to the geo JSON file.
+     -map_title (str): The title of the map.
+     -output_file (str): The file name to save the map as an image.
     Returns:
-     - None
+     -None
     """
 
-    # Download GeoJSON data
-    response = requests.get(geo_json_url)
-    geo_data = response.json()
+    # Load GeoJSON data
+    with open(geo_json_path) as f:
+        geo_data = json.load(f)
 
     # Create a folium map
     m = folium.Map(location=[37.8, -96], zoom_start=4)
@@ -164,6 +170,7 @@ def create_choropleth_map(df: pd.DataFrame, column: str, geo_json_url: str,
 
     # Give the map some time to render
     driver.implicitly_wait(5)
+    print("Rendering image... may take a few seconds...")
 
     # Save the screenshot
     png_file_path = os.path.join(output_dir, f'{output_file}.png')
